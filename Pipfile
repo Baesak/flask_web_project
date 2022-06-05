@@ -5,6 +5,11 @@ name = "pypi"
 
 [packages]
 flask = "*"
+flask-sqlalchemy = "*"
+sqlalchemy = "*"
+psycopg2-binary = "*"
+pydantic = "*"
+email-validator = "*"
 
 [dev-packages]
 

@@ -16,6 +16,10 @@ class UserSchema(BaseModel):
     admin_bool = False
 
 
+class GetUserSchema(BaseModel):
+    username: constr(max_length=255)
+
+
 class UserOrm(UserSchema):
     id: Optional[int]
 

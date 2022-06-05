@@ -9,3 +9,6 @@ class Film(db.Model):
     director_id = db.Column(db.Integer, db.ForeignKey("director.id"))
     rating = db.Column(db.NUMERIC, db.CheckConstraint("0.0<rating AND rating<10.0"))
     users_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+
+    def __str__(self):
+        return f"Film(title:{self.title}, director_id: {self.director_id})"

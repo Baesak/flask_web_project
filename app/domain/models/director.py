@@ -6,3 +6,6 @@ class Director(db.Model):
     first_name = db.Column(db.VARCHAR(255))
     last_name = db.Column(db.VARCHAR(255))
     age = db.Column(db.Integer, db.CheckConstraint("100>age AND age>0"))
+
+    def __str__(self):
+        return f"Director(name:{self.first_name} {self.last_name})"

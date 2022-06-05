@@ -14,6 +14,11 @@ class NewDirectorSchema(BaseModel):
     age: conint(lt=100, gt=0)
 
 
+class GetDirectorSchema(BaseModel):
+    first_name: constr(max_length=255)
+    last_name: constr(max_length=255)
+
+
 class DirectorOrm(DirectorSchema):
 
     class Config:

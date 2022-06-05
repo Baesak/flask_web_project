@@ -8,4 +8,6 @@ class Users(db.Model):
     email = db.Column(db.VARCHAR(255))
     admin_bool = db.Column(db.BOOLEAN, default=False)
 
+    def __str__(self):
+        return f"User({self.username})"
 

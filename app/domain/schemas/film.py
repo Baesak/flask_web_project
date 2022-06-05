@@ -6,8 +6,8 @@ class FilmSchema(BaseModel):
     title: Optional[constr(max_length=255)]
     description: Optional[str]
     poster: Optional[str]
-    director_id: Optional[int]
-    genres: Optional[List[int]]
+    director_name: Optional[str]
+    genres: Optional[List[str]]
     rating: Optional[confloat(lt=10.0, gt=0.0)]
     username: Optional[constr(max_length=255)]
 
@@ -17,9 +17,14 @@ class NewFilmSchema(BaseModel):
     description: str
     poster: str
     director_name: constr(max_length=255)
-    genres: List[int]
+    genres: List[str]
     rating: confloat(lt=10.0, gt=0.0)
     username: constr(max_length=255)
+
+
+class GetFilmSchema(BaseModel):
+    title = constr(max_length=255)
+    director_name = str
 
 
 class FilmOrm(FilmSchema):

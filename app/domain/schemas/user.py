@@ -16,6 +16,11 @@ class UserSchema(BaseModel):
     admin_bool = False
 
 
+class UserLogin(BaseModel):
+    username: constr(max_length=255)
+    password: constr(max_length=255)
+
+
 class GetUserSchema(BaseModel):
     username: constr(max_length=255)
 

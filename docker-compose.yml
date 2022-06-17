@@ -1,0 +1,40 @@
+version: "3.9"
+
+services:
+  flask_app:
+    restart: "always"
+    container_name: "flask_app"
+    build:
+      dockerfile: Dockerfile
+      context: .
+    ports:
+      - "5000:5000"
+
+  db:
+    image: postgres:14.2
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+#  db:
+#    image: postgres:14.2
+#    restart: always
+#    container_name: "postgres_db"
+#    environment:
+#      POSTGRES_USER: ${POSTGRES_USER}
+#      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+#      PGDATA: ${PGDATA}
+#    volumes:
+#      - db-data:/var/lib/postgresql/data
+#    ports:
+#      - "8080:8080"
+
+volumes:
+  db-data:
+

@@ -13,6 +13,8 @@ email-validator = "*"
 faker = "*"
 flask-migrate = "*"
 pylint = "*"
+flask-restx = "*"
+flask-login = "*"
 
 [dev-packages]
 

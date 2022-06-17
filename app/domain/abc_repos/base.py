@@ -1,38 +1,35 @@
 from abc import ABC, abstractmethod
-from typing import TypeVar, Type, Generic, Optional
+from typing import Generic, Optional, Type
 from pydantic import BaseModel
-from app.domain.models.db import db
-
-
-ModelType = TypeVar("ModelType", bound=db.Model)
-SchemaType = TypeVar("SchemaType", bound=BaseModel)
+from app.utils.custom_types import ModelType, SchemaType
 
 
 class ABCBaseRepo(ABC, Generic[ModelType, SchemaType]):
 
-    def __init__(self, model: Type[ModelType]):
+    def __init__(self, model: Type[ModelType], from_orm_schema: Type[SchemaType]):
         self.model = model
+        self.from_orm_schema = from_orm_schema
 
     @abstractmethod
-    def get_with_id(self, schema: SchemaType) -> Optional[ModelType]:
+    def get_with_id(self, schema: BaseModel) -> Optional[Type[SchemaType]]:
         ...
 
     @abstractmethod
-    def get(self,  schema: SchemaType) -> Optional[ModelType]:
+    def get(self,  schema: BaseModel) -> Optional[Type[SchemaType]]:
         ...
 
     @abstractmethod
-    def get_all(self) -> Optional[ModelType]:
+    def get_all(self, page: int, per_page: int) -> Optional[ModelType]:
         ...
 
     @abstractmethod
-    def create(self,  schema: SchemaType) -> Optional[ModelType]:
+    def create(self,  schema: BaseModel) -> Optional[Type[SchemaType]]:
         ...
 
     @abstractmethod
-    def update(self, get_schema: SchemaType, update_schema: SchemaType) -> Optional[ModelType]:
+    def update(self, get_schema: BaseModel, update_schema: BaseModel) -> Optional[Type[SchemaType]]:
         ...
 
     @abstractmethod
-    def delete(self, schema: SchemaType) -> Optional[ModelType]:
+    def delete(self, schema: BaseModel) -> None:
         ...

@@ -13,3 +13,7 @@ class GetFromIdSchema(BaseModel):
 class GetAll(BaseModel):
     page: conint(gt=0) = 1
     items_per_page: conint(gt=0) = 10
+
+
+class SomeList(BaseModel):
+    lst: list

@@ -15,11 +15,12 @@ class NewDirectorSchema(BaseModel):
 
 
 class GetDirectorSchema(BaseModel):
-    first_name: constr(max_length=255)
-    last_name: constr(max_length=255)
+    first_name: Optional[constr(max_length=255)]
+    last_name: Optional[constr(max_length=255)]
 
 
 class DirectorOrm(DirectorSchema):
+    id: Optional[int]
 
     class Config:
         orm_mode = True

@@ -1,47 +1,53 @@
 import datetime
-from typing import Optional, List, Union
-from pydantic import BaseModel, confloat, constr, validator, conint
+from typing import Optional, List, Union, Any
+from pydantic import BaseModel, confloat, constr, validator, conint, HttpUrl
 
 
-def check_is_date(value: str) -> str:
+def check_is_date(value: Union[str, datetime.date]) -> str:
     try:
-        datetime.datetime.strptime(value, '%Y-%m-%d')
+        if isinstance(value, str):
+            datetime.datetime.strptime(value, '%Y-%m-%d')
         return value
     except ValueError:
         raise ValueError("'release_data' should be data in YYYY-MM-DD format.")
 
 
-def check_director(value: Union[int, str]):
-    if type(value) == str:
-        if len(value.split()) != 2:
-            raise ValueError("You should enter director's id or full name!")
-    return value
+def check_genre(value: list):
+    genres_list = ["Action", "Comedy", "Drama", "Fantasy", "Horror",
+                   "Mystery", "Romance", "Thriller", "Western"]
+    genres_set = {genre.capitalize() for genre in value}
+
+    if not genres_set.issubset(genres_list):
+        raise ValueError(f"There are no such genres! Available genres:"
+                         f"{genres_list}")
+
+    return list(genres_set)
 
 
 class FilmSchema(BaseModel):
     title: Optional[constr(max_length=255)]
     description: Optional[str]
-    poster: Optional[str]
-    release_date: Optional[constr(max_length=10)]
-    director_id: Optional[conint(gt=0)]
+    poster: Optional[HttpUrl]
+    release_date: Optional[Union[datetime.date, constr(max_length=10)]]
+    director_id: Optional[Union[conint(gt=0)]]
     rating: Optional[confloat(lt=10.0, gt=-1)]
     user_id: Optional[conint(gt=0)]
     genres: Optional[List]
 
-    _check_date = validator('release_date', allow_reuse=True)(check_is_date)
+    _check_date = validator("release_date", allow_reuse=True)(check_is_date)
 
 
 class NewFilmSchema(BaseModel):
     title: constr(max_length=255)
     description: Optional[str]
-    poster: str
+    poster: HttpUrl
     release_date: constr(max_length=10)
-    director: Union[conint(gt=0), constr(max_length=510)]
-    genres: List[Union[conint(gt=0), constr(max_length=255)]]
+    director_id: conint(gt=0)
+    genres: List
     rating: confloat(lt=10.0, gt=0.0)
-    user: Union[conint(gt=0), constr(max_length=255)]
+    user_id: conint(gt=0)
 
-    _check_director = validator('director', allow_reuse=True)(check_director)
+    _check_date = validator("release_date", allow_reuse=True)(check_is_date)
 
 
 class GetFilmSchema(BaseModel):
@@ -59,24 +65,25 @@ class FilterFilmSchema(BaseModel):
     genres: Optional[List[str]]
     date_from: Optional[constr(max_length=10)]
     date_to: Optional[constr(max_length=10)]
-    director: Optional[Union[conint(gt=0), constr(max_length=255)]]
+    director_id: Optional[conint(gt=0)]
     page: conint(gt=0) = 1
     items_per_page: conint(gt=0) = 10
 
     _check_date_from = validator("date_from", allow_reuse=True)(check_is_date)
     _check_date_to = validator("date_to", allow_reuse=True)(check_is_date)
-    _check_director = validator('director', allow_reuse=True)(check_director)
+    _check_genre = validator("genres", allow_reuse=True)(check_genre)
 
     @validator("date_to")
-    def check_date_params(cls, v, values, **kwargs):
-        if not values["date_from"] and v:
+    def check_date_params(cls, value, values, **kwargs):
+        if not values["date_from"] and value:
             raise ValueError("To filter films by date in some range you should specify date_from and date_to")
 
-        return v
+        return value
 
 
 class SortFilmSchema(BaseModel):
     sort_by: str
+    sort_type = "asc"
     page: conint(gt=0) = 1
     items_per_page: conint(gt=0) = 10
 
@@ -87,9 +94,30 @@ class SortFilmSchema(BaseModel):
                              "options")
         return value
 
+    @validator("sort_type")
+    def check_sort_type(cls, value):
+        if value not in ["desc", "asc"]:
+            raise ValueError("You should choose between 'desc' and 'asc' sorting"
+                             "types")
+        return value
+
 
 class FilmOrm(FilmSchema):
     id: Optional[int]
 
     class Config:
         orm_mode = True
+
+    @validator("genres")
+    def unpack_genres(cls, value: list):
+        return [model.genre if not isinstance(model, str) else model for model in value]
+
+    @validator("release_date")
+    def date_to_str(cls, value: datetime.date):
+        return value.strftime("%Y-%m-%d")
+
+    @validator("director_id")
+    def convert_none(cls, value):
+        if not value:
+            return "unknown"
+        return value

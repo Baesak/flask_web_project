@@ -10,6 +10,9 @@ sqlalchemy = "*"
 psycopg2-binary = "*"
 pydantic = "*"
 email-validator = "*"
+faker = "*"
+flask-migrate = "*"
+pylint = "*"
 
 [dev-packages]
 

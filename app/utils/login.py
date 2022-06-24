@@ -1,3 +1,5 @@
+"""Flask_login setup"""
+
 from flask_login import LoginManager
 from app import app
 from app.data.repos import user_repo

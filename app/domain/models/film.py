@@ -9,7 +9,7 @@ class Film(db.Model):
     release_date = db.Column(db.Date)
     director_id = db.Column(db.Integer, db.ForeignKey("director.id", ondelete="SET NULL"))
     rating = db.Column(db.NUMERIC, db.CheckConstraint("0.0<=rating AND rating<=10.0"))
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"))
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"))
     genres = db.relationship("Genre", secondary='film_genre',
                              backref=db.backref("Film"), cascade="all,delete")
     director = db.relationship("Director", backref=db.backref("Film"))

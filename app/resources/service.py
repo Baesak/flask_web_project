@@ -1,3 +1,5 @@
+"""Domain service instances for usage in routes."""
+
 from app.domain.service import FilmGet, FilmAction, UserGet, UserAction
 from app.data import repos
 

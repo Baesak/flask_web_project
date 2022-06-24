@@ -13,7 +13,7 @@ class UserSchema(BaseModel):
     username: Optional[constr(max_length=255)]
     password: Optional[constr(max_length=255)]
     email: Optional[EmailStr]
-    admin_bool: bool
+    admin_bool: Optional[bool]
 
 
 class UserLogin(BaseModel):

@@ -1,6 +1,8 @@
+"""Service for domain resources and data communication."""
+
 from abc import ABC
 from flask import request
-from flask_login import login_user, current_user
+from flask_login import current_user
 from app.domain import schemas
 from app.domain.abc_repos import ABCBaseRepo, ABCFilmRepo
 from app.utils.logger import my_logger
@@ -9,12 +11,15 @@ from app.exceptions import (MissingData, NoAccessError,
 
 
 class FilmUtilsMixin(ABC):
+    """Utils for some other classes."""
 
     def __init__(self, film_repo: ABCFilmRepo, director_repo: ABCBaseRepo):
         self.film_repo = film_repo
         self.director_repo = director_repo
 
     def _find_director(self, name: str):
+        """Find's director and return's his schema"""
+
         name_list = name.split("_")
 
         director_schema = self.director_repo.get(schemas.GetDirectorSchema(first_name=name_list[0],
@@ -25,6 +30,8 @@ class FilmUtilsMixin(ABC):
         return director_schema
 
     def _find_film(self, title: str, director_name: str):
+        """Find's film and return's his schema"""
+
         director_id = self._find_director(director_name).id
         schema = schemas.GetFilmSchema(title=title, director_id=director_id)
 
@@ -36,32 +43,40 @@ class FilmUtilsMixin(ABC):
 
 
 class FilmGet(FilmUtilsMixin):
+    """Film operations with 'GET' method."""
 
     def __init__(self, film_repo: ABCFilmRepo, director_repo: ABCBaseRepo):
         super().__init__(film_repo, director_repo)
 
     def find_film_by_title(self, title, page, per_page):
+        """Returning list of films by non-strict title search."""
+
         schema = schemas.GetFilmByTitle(title=title)
         schemas_list = self.film_repo.get_films_by_title(schema, page, per_page)
 
         return {'films': schemas_list}, 206
 
     def get_film(self, title: str, director_name: str):
+        """Returning film."""
+
         film_schema = self._find_film(title, director_name)
 
-        return {"film:": film_schema.dict()}, 200
+        return {"film": film_schema.dict()}, 200
 
     def sort_films(self, sort_by: str, sort_type: str, page: int, per_page: int) -> tuple:
         schema = schemas.SortFilmSchema(sort_by=sort_by, sort_type=sort_type,
                                         page=page, per_page=per_page)
+        """Returning sorted films list."""
 
         schemas_list = self.film_repo.get_films_with_sort(schema, page, per_page)
 
         return {"films": schemas_list}, 206
 
     def filter_films(self, req: request, page: int, per_page: int) -> tuple:
+        """Returning list of films filtered by some parameters."""
+
         director_id = None
-        if request.args.get("director_name"):
+        if req.args.get("director_name"):
             director_id = self._find_director(req.args.get("director_name")).id
 
         schema = schemas.FilterFilmSchema(genres=req.args.getlist("genres"),
@@ -75,11 +90,14 @@ class FilmGet(FilmUtilsMixin):
 
 
 class FilmAction(FilmUtilsMixin):
+    """Film operations with not 'GET' method."""
 
     def __init__(self, film_repo: ABCFilmRepo, director_repo: ABCBaseRepo):
         super().__init__(film_repo, director_repo)
 
     def delete_film(self, title: str, director_name: str) -> tuple:
+        """Delete film."""
+
         film_schema = self._find_film(title, director_name)
         self._check_film_permission(film_schema)
 
@@ -91,6 +109,8 @@ class FilmAction(FilmUtilsMixin):
         return {"deleted_film": film_schema.dict()}, 200
 
     def update_film(self, title, director_name, req: request) -> tuple:
+        """Update film."""
+
         film_schema = self._find_film(title, director_name)
         self._check_film_permission(film_schema)
 
@@ -115,8 +135,11 @@ class FilmAction(FilmUtilsMixin):
         return {"updated_film": updated_schema.dict()}, 200
 
     def create_film(self, req: request) -> tuple:
+        """Create film."""
+
         director_id = self._find_director(req.args.get("director_name")).id
 
+        print(current_user.id, "************")
         schema = schemas.NewFilmSchema(title=req.args.get("title"),
                                        description=req.args.get("description"),
                                        poster=req.args.get("poster"),
@@ -132,16 +155,21 @@ class FilmAction(FilmUtilsMixin):
         return {"new_film": new_film_schema.dict()}, 201
 
     def _check_film_permission(self, film):
+        """Check is user had posted film or is he an admin.
+         If not raises FilmOperationsError"""
+
         if current_user.id != film.user_id and not current_user.admin_bool:
             raise FilmOperationsError
 
 
 class UserGet:
+    """User operations with 'GET' method"""
 
     def __init__(self, user_repo: ABCBaseRepo):
         self.user_repo = user_repo
 
-    def login(self, username: str, password: str) -> tuple:
+    def login(self, username: str, password: str) -> bool:
+        """Login into existing account"""
         schema = schemas.GetUserSchema(username=username)
 
         try:
@@ -151,16 +179,18 @@ class UserGet:
         except ValueError:
             raise AuthenticationError
 
-        login_user(user_schema)
-        return {"message": "Successfully logged in."}, 200
+        return user_schema
 
 
 class UserAction:
+    """User operations with not 'GET' method."""
 
     def __init__(self, user_repo: ABCBaseRepo):
         self.user_repo = user_repo
 
     def create_user(self, req: request) -> tuple:
+        """Create new user."""
+
         if self.user_repo.get(schemas.GetUserSchema(username=req.args.get("username"))):
             raise UserAlreadyExists
 
@@ -175,6 +205,8 @@ class UserAction:
         return {"new_user": new_user_schema.dict()}, 201
 
     def make_admin(self, username: str) -> tuple:
+        """Make existing user an admin."""
+
         if not current_user.admin_bool:
             raise NoAccessError
 
@@ -189,6 +221,8 @@ class UserAction:
         return {"new_admin": updated_schema.dict()}, 200
 
     def _find_user(self, username: str):
+        """Find's user and return's his schema"""
+
         schema = schemas.GetUserSchema(username=username)
 
         user_schema = self.user_repo.get(schema)
@@ -196,72 +230,3 @@ class UserAction:
             raise MissingData("There are no such user in db!")
 
         return user_schema
-
-
-# class DomainResourcesService:
-#
-#     def __init__(self, film_repo: ABCFilmRepo, user_repo: ABCBaseRepo, director_repo: ABCBaseRepo):
-#         self.film_repo = film_repo
-#         self.user_repo = user_repo
-#         self.director_repo = director_repo
-#
-#     def create_user(self, req: request) -> dict:
-#         if self.user_repo.get(schemas.GetUserSchema(username=req.args.get("username"))):
-#             raise UserAlreadyExists
-#
-#         schema = schemas.NewUserSchema(username=req.args.get("username"),
-#                                        password=req.args.get("password"),
-#                                        email=req.args.get("email"),
-#                                        admin_bool=False)
-#
-#         new_user_schema = self.user_repo.create(schema)
-#         my_logger.info(f"user '{new_user_schema.username}' created")
-#
-#         return {"new_user": new_user_schema.dict()}
-#
-#     def make_admin(self, username: str) -> dict:
-#         if not current_user.admin_bool:
-#             raise NoAccessError
-#
-#         user_id = self._find_user(username).id
-#         get_schema = schemas.GetUserSchema(username=username)
-#         upd_schema = schemas.UserSchema(admin_bool=True)
-#
-#         self.user_repo.update(get_schema, upd_schema)
-#         updated_schema = self.user_repo.get_with_id(schemas.GetFromIdSchema(id=user_id))
-#         my_logger.info(f"{current_user.username} made {updated_schema} admin")
-#
-#         return {"new_admin": updated_schema.dict()}
-#
-#     def _find_user(self, username: str):
-#         schema = schemas.GetUserSchema(username=username)
-#
-#         user_schema = self.user_repo.get(schema)
-#         if not user_schema:
-#             raise MissingData("There are no such user in db!")
-#
-#         return user_schema
-#
-#     def _check_film_permission(self, film):
-#         if current_user.id != film.user_id and not current_user.admin_bool:
-#             raise FilmOperationsError
-#
-#     def _find_film(self, title: str, director_name: str):
-#         director_id = self._find_director(director_name).id
-#         schema = schemas.GetFilmSchema(title=title, director_id=director_id)
-#
-#         film_schema = self.film_repo.get(schema)
-#         if not film_schema:
-#             raise MissingData("There are no such Film in db!")
-#
-#         return film_schema
-#
-#     def _find_director(self, name: str):
-#         name_list = name.split("_")
-#
-#         director_schema = self.director_repo.get(schemas.GetDirectorSchema(first_name=name_list[0],
-#                                                                            last_name=name_list[1]))
-#         if not director_schema:
-#             raise MissingData("There are no such Director in db!")
-#
-#         return director_schema

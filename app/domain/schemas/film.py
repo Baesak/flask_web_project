@@ -3,13 +3,18 @@ from typing import Optional, List, Union, Any
 from pydantic import BaseModel, confloat, constr, validator, conint, HttpUrl
 
 
-def check_is_date(value: Union[str, datetime.date]) -> str:
-    try:
-        if isinstance(value, str):
-            datetime.datetime.strptime(value, '%Y-%m-%d')
+def check_is_date(value: Union[str, datetime.date]) -> Union[str, datetime.date]:
+    if value:
+        try:
+            if isinstance(value, str):
+                datetime.datetime.strptime(value, '%Y-%m-%d')
+                return value
+        except ValueError:
+            raise ValueError("'release_data' should be data in YYYY-MM-DD format.")
+
+        if not isinstance(value, datetime.date):
+            raise ValueError("'release_data' should be string or datetime.date object.")
         return value
-    except ValueError:
-        raise ValueError("'release_data' should be data in YYYY-MM-DD format.")
 
 
 def check_genre(value: list):
@@ -28,11 +33,12 @@ class FilmSchema(BaseModel):
     title: Optional[constr(max_length=255)]
     description: Optional[str]
     poster: Optional[HttpUrl]
-    release_date: Optional[Union[datetime.date, constr(max_length=10)]]
+    release_date: Optional[Union[datetime.datetime, datetime.date,
+                                 constr(max_length=10)]]
     director_id: Optional[Union[conint(gt=0)]]
     rating: Optional[confloat(lt=10.0, gt=-1)]
     user_id: Optional[conint(gt=0)]
-    genres: Optional[List]
+    genres: Optional[list]
 
     _check_date = validator("release_date", allow_reuse=True)(check_is_date)
 
@@ -41,13 +47,14 @@ class NewFilmSchema(BaseModel):
     title: constr(max_length=255)
     description: Optional[str]
     poster: HttpUrl
-    release_date: constr(max_length=10)
+    release_date: Union[constr(max_length=10), datetime.datetime]
     director_id: conint(gt=0)
-    genres: List
+    genres: list
     rating: confloat(lt=10.0, gt=0.0)
     user_id: conint(gt=0)
 
     _check_date = validator("release_date", allow_reuse=True)(check_is_date)
+    _check_genre = validator("genres", allow_reuse=True)(check_genre)
 
 
 class GetFilmSchema(BaseModel):

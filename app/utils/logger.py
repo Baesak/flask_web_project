@@ -1,3 +1,5 @@
+"""Logger setup."""
+
 import logging
 from sys import stdout
 

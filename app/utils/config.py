@@ -1,3 +1,5 @@
+"""Custom app config"""
+
 
 POSTGRES_USER = "postgres"
 POSTGRES_PASSWORD = "postgres_password"

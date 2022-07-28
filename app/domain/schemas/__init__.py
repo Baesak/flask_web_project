@@ -1,3 +1,5 @@
+"""Package with pydantic schemas."""
+
 from pydantic import BaseModel, conint
 from .film import GetFilmByTitle, GetFilmSchema, FilmSchema, FilterFilmSchema, FilmOrm, SortFilmSchema, NewFilmSchema
 from .user import UserSchema, UserOrm, UserLogin, NewUserSchema, GetUserSchema

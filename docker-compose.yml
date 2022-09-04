@@ -7,7 +7,7 @@ services:
     depends_on:
       - db
     build:
-      dockerfile: Dockerfile
+      dockerfile: app_dockerfile/Dockerfile
       context: .
     expose:
       - "5000"

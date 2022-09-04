@@ -13,4 +13,3 @@ file_handler.setFormatter(logging.Formatter(fmt='[%(asctime)s: %(levelname)s] %(
 stdout_handler.setFormatter(logging.Formatter(fmt='[%(asctime)s: %(levelname)s] %(message)s'))
 my_logger.addHandler(file_handler)
 my_logger.addHandler(stdout_handler)
-

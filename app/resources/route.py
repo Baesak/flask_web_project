@@ -5,8 +5,7 @@ from flask_login import login_required, logout_user, login_user
 from flask import request
 from app import api
 from .swagger import create_film_parser, create_user_parser,\
-    filter_film_parser
-from flask_restx import fields
+    filter_film_parser, user
 from .service import user_get, user_action, film_get, film_action
 
 
@@ -65,18 +64,18 @@ class Film(Resource):
         return film_action.update_film(title, director, request)
 
 
-@api.route("/new_user", methods=["POST"])
-@api.route("/make_admin/<string:username>", methods=["PUT"])
+@user.route("/new_user", methods=["POST"])
+@user.route("/make_admin/<string:username>", methods=["PUT"])
 class User(Resource):
 
-    @api.doc(responses={201: "Successfully created", 401: "ValidationError",
+    @user.doc(responses={201: "Successfully created", 401: "ValidationError",
                         409: "UserAlreadyExists"},
              description="Create user.")
-    @api.expect(create_user_parser())
+    @user.expect(create_user_parser())
     def post(self):
         return user_action.create_user(request)
 
-    @api.doc(responses={201: "Successfully created", 204: "Missing data",
+    @user.doc(responses={201: "Successfully created", 204: "Missing data",
                         403: "NoAccessError"},
              description="Make existing user an admin. Only admin"
                          "could do that action.")
@@ -85,21 +84,21 @@ class User(Resource):
         return user_action.make_admin(username)
 
 
-@api.route("/login/<string:username>/<string:password>")
+@user.route("/login/<string:username>/<string:password>")
 class Login(Resource):
 
-    @api.doc(responses={401: "AuthenticationError", 200: "Success"},
-             description="Login into account.")
+    @user.doc(responses={401: "AuthenticationError", 200: "Success"},
+              description="Login into account.")
     def get(self, username, password):
         user_schema = user_get.login(username, password)
         login_user(user_schema)
         return {"message": "Successfully logged in."}, 200
 
 
-@api.route("/logout")
+@user.route("/logout")
 class LogOut(Resource):
 
-    @api.doc(responses={401: "UNAUTHORIZED", 200: "Success"},
+    @user.doc(responses={401: "UNAUTHORIZED", 200: "Success"},
              description="Logout. Login required.")
     @login_required
     def get(self):

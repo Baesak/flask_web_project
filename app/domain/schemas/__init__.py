@@ -5,7 +5,6 @@ from .film import GetFilmByTitle, GetFilmSchema, FilmSchema, FilterFilmSchema, F
 from .user import UserSchema, UserOrm, UserLogin, NewUserSchema, GetUserSchema
 from .genre import GenreSchema, GenreOrm
 from .director import DirectorOrm, DirectorSchema, GetDirectorSchema, NewDirectorSchema
-from .film_genre import FilmGenre, FilmGenreOrm
 
 
 class GetFromIdSchema(BaseModel):
